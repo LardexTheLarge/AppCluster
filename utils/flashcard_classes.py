@@ -1,6 +1,7 @@
 import os
 from tkinter import *
 from tkinter import ttk
+import math
 import json
 
 class FlashCardApp:
@@ -8,42 +9,77 @@ class FlashCardApp:
         s = ttk.Style()
         s.theme_use('classic')
         # winnative', 'clam', 'alt', 'default', 'classic', 'vista', 'xpnative'
+
         root.title("Flash Cards")
-        # root.maxsize(800, 800)
-        # root.minsize(800, 800)
         self.FLASHCARD_DIR = "flashcard_collections"
 
-        self.main = ttk.Frame(root)
-        self.collection_frame = ttk.Frame(self.main, relief="ridge", borderwidth=1)
+        #Main Container
+        self.content = ttk.Frame(root, padding=10)
+        self.content.grid(sticky=(N, S, E, W))
+        root.columnconfigure(0, weight=1)
+        root.rowconfigure(0, weight=1)
 
-        flashCardCollection = self.get_flash_collection()
+        #Flash card collection grid
+        self.collection_frame = ttk.Frame(self.content, relief="ridge", borderwidth=1)
+        self.collection_frame.grid(column=5, row=5, sticky=(N, S, E, W))
+
+        self.refresh_collections()
+
+    def refresh_collections(self):
+        #Clears the existing widgets
+        for w in self.collection_frame.winfo_children():
+            w.destroy()
+
+        files = self.get_flash_collection()
+        names = list(files.keys())
+        count = len(names)
+        if count == 0:
+            ttk.Label(self.collection_frame, text="No collections found.").grid()
+            return
         
-        # for loop to handle the collections and their respective labels
-        for i, collection_title in enumerate(flashCardCollection):
-            row = i // 5
-            col = i % 5
+        #find grid dimensions
+        cols = math.ceil(math.sqrt(count))
+        rows = math.ceil(count / cols)
 
-            flashCardCollectionLabel = ttk.Label(
+        #Expands the items in the grid evenly
+        for c in range(cols):
+            self.collection_frame.columnconfigure(c, weight=1)
+        for r in range(rows):
+            self.collection_frame.rowconfigure(r, weight=1)
+
+        #put a file name in a label item
+        for idx, filename in enumerate(names):
+            r, c = divmod(idx, cols)
+
+            lbl = ttk.Label(
                 self.collection_frame,
-                text=collection_title,
+                text=filename,
                 width=20,
-                # height=6,
                 relief="solid",
                 borderwidth=1,
                 cursor="hand2",
-                wraplength=250,
+                wraplength=150,
                 background="lightblue",
-                )
+                anchor="center",
+            )
+            lbl.grid(row=r, column=c, padx=5, pady=5, sticky=(N,S,E,W))
 
-            flashCardCollectionLabel.grid(row=row, column=col, padx=5, pady=5, columnspan=2, rowspan=2)
+            lbl.bind("<Button-1>", lambda e, fn=filename: self.open_collection(fn))
 
-            flashCardCollectionLabel.bind("<Button-1>", lambda event, lbl=flashCardCollectionLabel, title=collection_title: self.open_collection(title))
+        btn_row = rows
+        create_btn = ttk.Button(
+            self.collection_frame,
+            text="Create Collection",
+            command="",
+        )
 
-        createCollectionBtn = ttk.Button(self.collection_frame, text="Create Collection", command="")
-
-        self.main.grid(column=0, row=0, columnspan=10, rowspan=10)
-        self.collection_frame.grid(column=5, row=5, columnspan=10, rowspan=10)
-        createCollectionBtn.grid(column=5, row=10, columnspan=2)
+        create_btn.grid(
+            row=btn_row,
+            column=0,
+            columnspan=cols,
+            pady=(10, 0),
+            sticky=(E,W)
+        )
 
 
     def get_flash_collection(self):
@@ -71,32 +107,24 @@ class FlashCardApp:
 
     def open_collection(self, title):
         """Opens the collection that the user clicks on"""
-
+        #clears the widgets on the collection frame
         for widget in self.collection_frame.winfo_children():
             widget.destroy()
 
+        # title of the flash card using a text box
         opened_collection_title = ttk.Entry(self.collection_frame)
         opened_collection_title.insert(0, title)
 
+        #List of flash card objects from the json file
         flashcards = self.get_card_content(title)
-        extracted = []
+        # extracted = []
 
-        for card in flashcards:
-            if isinstance(card, dict):
-                values = list(card.values())
-                extracted.append(values)
+        for row_index, flashcard in enumerate(flashcards):
+            q_lbl = ttk.Label(self.collection_frame, text=flashcard["question"])
+            a_lbl = ttk.Label(self.collection_frame, text=flashcard["answer"])
 
-        for value in extracted:
-            card_title = ttk.Entry(self.collection_frame)
-            card_title.insert(1, value[0])
-
-            card_text = ttk.Entry(self.collection_frame)
-            card_text.insert(1, value[1])
-
-            row = len(extracted)
-
-        card_title.grid(column=0, row=row, columnspan=4)
-        card_text.grid(column=5, row=row, columnspan=5)
+            q_lbl.grid(row=row_index, column=0, sticky=(W), padx=5, pady=2)
+            a_lbl.grid(row=row_index, column=1, sticky=(W), padx=5, pady=2)
 
     def get_card_content(self, title):
         """Gets the json objects from json files in flashcard collection folder"""

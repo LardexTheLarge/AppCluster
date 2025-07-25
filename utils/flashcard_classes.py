@@ -1,5 +1,6 @@
 import os
 from tkinter import *
+import tkinter as tk
 from tkinter import ttk
 import math
 import json
@@ -15,13 +16,18 @@ class FlashCardApp:
 
         #Main Container
         self.content = ttk.Frame(root, padding=10)
-        self.content.grid(sticky=(N, S, E, W))
+        self.content.grid(sticky=(tk.N, tk.S, tk.E, tk.W))
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
 
+        self.content.columnconfigure(0, weight=1)
+        self.content.rowconfigure(0, weight=1)
+
         #Flash card collection grid
         self.collection_frame = ttk.Frame(self.content, relief="ridge", borderwidth=1)
-        self.collection_frame.grid(column=5, row=5, sticky=(N, S, E, W))
+        self.collection_frame.grid(sticky=(tk.N, tk.S, tk.E, tk.W))
+        self.collection_frame.columnconfigure(0, weight=1)
+        self.collection_frame.rowconfigure(0, weight=1)
 
         self.refresh_collections()
 
@@ -38,18 +44,18 @@ class FlashCardApp:
             return
         
         #find grid dimensions
-        cols = math.ceil(math.sqrt(count))
-        rows = math.ceil(count / cols)
+        self.cols = math.ceil(math.sqrt(count))
+        self.rows = math.ceil(count / self.cols)
 
         #Expands the items in the grid evenly
-        for c in range(cols):
+        for c in range(self.cols):
             self.collection_frame.columnconfigure(c, weight=1)
-        for r in range(rows):
+        for r in range(self.rows):
             self.collection_frame.rowconfigure(r, weight=1)
 
         #put a file name in a label item
         for idx, filename in enumerate(names):
-            r, c = divmod(idx, cols)
+            r, c = divmod(idx, self.cols)
 
             lbl = ttk.Label(
                 self.collection_frame,
@@ -66,7 +72,7 @@ class FlashCardApp:
 
             lbl.bind("<Button-1>", lambda e, fn=filename: self.open_collection(fn))
 
-        btn_row = rows
+        btn_row = self.rows
         create_btn = ttk.Button(
             self.collection_frame,
             text="Create Collection",
@@ -76,7 +82,7 @@ class FlashCardApp:
         create_btn.grid(
             row=btn_row,
             column=0,
-            columnspan=cols,
+            columnspan=self.cols,
             pady=(10, 0),
             sticky=(E,W)
         )
@@ -117,11 +123,10 @@ class FlashCardApp:
 
         #List of flash card objects from the json file
         flashcards = self.get_card_content(title)
-        # extracted = []
 
         for row_index, flashcard in enumerate(flashcards):
-            q_lbl = ttk.Label(self.collection_frame, text=flashcard["question"])
-            a_lbl = ttk.Label(self.collection_frame, text=flashcard["answer"])
+            q_lbl = ttk.Label(self.collection_frame, text=flashcard["question"],width=80)
+            a_lbl = ttk.Label(self.collection_frame, text=flashcard["answer"], width=150)
 
             q_lbl.grid(row=row_index, column=0, sticky=(W), padx=5, pady=2)
             a_lbl.grid(row=row_index, column=1, sticky=(W), padx=5, pady=2)

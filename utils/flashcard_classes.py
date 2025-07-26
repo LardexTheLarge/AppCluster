@@ -11,23 +11,31 @@ class FlashCardApp:
         s.theme_use('classic')
         # winnative', 'clam', 'alt', 'default', 'classic', 'vista', 'xpnative'
 
+        #Root
+        root.minsize(800,800)
         root.title("Flash Cards")
+        root.columnconfigure(0, weight=1)
+        root.rowconfigure(0, weight=1)
         self.FLASHCARD_DIR = "flashcard_collections"
 
         #Main Container
         self.content = ttk.Frame(root, padding=10)
         self.content.grid(sticky=(tk.N, tk.S, tk.E, tk.W))
-        root.columnconfigure(0, weight=1)
-        root.rowconfigure(0, weight=1)
-
         self.content.columnconfigure(0, weight=1)
-        self.content.rowconfigure(0, weight=1)
+        self.content.rowconfigure(1, weight=1)
+
+        #Title grid
+        self.title_frame = ttk.Frame(self.content)
+        self.title_frame.grid(row=0, sticky=(N,E,W), pady=5)
+        self.title_frame.columnconfigure(0, weight=1)
+        self.title_frame.columnconfigure(1, weight=1)
+        self.title_frame.columnconfigure(2, weight=1)
 
         #Flash card collection grid
         self.collection_frame = ttk.Frame(self.content, relief="ridge", borderwidth=1)
-        self.collection_frame.grid(sticky=(tk.N, tk.S, tk.E, tk.W))
+        self.collection_frame.grid(row=1, sticky=(tk.N, tk.E, tk.W))
         self.collection_frame.columnconfigure(0, weight=1)
-        self.collection_frame.rowconfigure(0, weight=1)
+        self.collection_frame.rowconfigure(1, weight=2)
 
         self.refresh_collections()
 
@@ -83,7 +91,7 @@ class FlashCardApp:
             row=btn_row,
             column=0,
             columnspan=self.cols,
-            pady=(10, 0),
+            pady=(5),
             sticky=(E,W)
         )
 
@@ -111,6 +119,13 @@ class FlashCardApp:
     #     with open(path, "w") as file:
     #         json.dump(data, file, indent=4)
 
+    def show_collections(self):
+        """Returns to flash card collection grid"""
+        #clears the widgets on the collection frame
+        for widget in self.collection_frame.winfo_children():
+            widget.destroy()
+        self.refresh_collections()
+
     def open_collection(self, title):
         """Opens the collection that the user clicks on"""
         #clears the widgets on the collection frame
@@ -118,18 +133,27 @@ class FlashCardApp:
             widget.destroy()
 
         # title of the flash card using a text box
-        opened_collection_title = ttk.Entry(self.collection_frame)
-        opened_collection_title.insert(0, title)
+        opened_collection_title = ttk.Label(self.title_frame, text=title, anchor="center")
+        opened_collection_title.grid(row=0, column=1)
 
         #List of flash card objects from the json file
         flashcards = self.get_card_content(title)
 
+        #For loop that assigns a row and flashcard form the flashcards list
         for row_index, flashcard in enumerate(flashcards):
-            q_lbl = ttk.Label(self.collection_frame, text=flashcard["question"],width=80)
-            a_lbl = ttk.Label(self.collection_frame, text=flashcard["answer"], width=150)
+            q_lbl = ttk.Label(self.collection_frame, text=flashcard["question"])
+            a_lbl = ttk.Label(self.collection_frame, text=flashcard["answer"])
 
-            q_lbl.grid(row=row_index, column=0, sticky=(W), padx=5, pady=2)
-            a_lbl.grid(row=row_index, column=1, sticky=(W), padx=5, pady=2)
+            q_lbl.grid(row=row_index, column=0, sticky=(N,W), padx=5, pady=2)
+            a_lbl.grid(row=row_index, column=1, sticky=(N,W), padx=5, pady=2)
+
+        #Button to go back to flash card collections
+        back_btn = ttk.Button(
+            self.collection_frame,
+            text = "Back",
+            command=self.show_collections
+        )
+        back_btn.grid(pady=5, sticky=(E,W))
 
     def get_card_content(self, title):
         """Gets the json objects from json files in flashcard collection folder"""

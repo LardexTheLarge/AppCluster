@@ -19,30 +19,38 @@ class FlashCardApp:
         self.FLASHCARD_DIR = "flashcard_collections"
 
         #Main Container
-        self.content = ttk.Frame(root, padding=10)
+        self.content = ttk.Frame(root, padding=(5,0))
         self.content.grid(sticky=(tk.N, tk.S, tk.E, tk.W))
         self.content.columnconfigure(0, weight=1)
         self.content.rowconfigure(1, weight=1)
 
         #Title grid
-        self.title_frame = ttk.Frame(self.content)
+        self.title_frame = ttk.Frame(self.content, relief="ridge", borderwidth=1)
         self.title_frame.grid(row=0, sticky=(N,E,W), pady=5)
         self.title_frame.columnconfigure(0, weight=1)
         self.title_frame.columnconfigure(1, weight=1)
         self.title_frame.columnconfigure(2, weight=1)
 
         #Flash card collection grid
-        self.collection_frame = ttk.Frame(self.content, relief="ridge", borderwidth=1)
+        self.collection_frame = ttk.Frame(self.content)
         self.collection_frame.grid(row=1, sticky=(tk.N, tk.E, tk.W))
         self.collection_frame.columnconfigure(0, weight=1)
         self.collection_frame.rowconfigure(1, weight=2)
+
+        #Buttons grid
+        self.btn_frame = ttk.Frame(self.content)
+        self.btn_frame.grid(row=2, sticky=(S,E,W))
+        self.btn_frame.columnconfigure(0, weight=1)
+        self.btn_frame.rowconfigure(2, weight=1)
 
         self.refresh_collections()
 
     def refresh_collections(self):
         #Clears the existing widgets
-        for w in self.collection_frame.winfo_children():
-            w.destroy()
+        self.wipe_ui()
+
+        title = ttk.Label(self.title_frame, text="Flash Card Collections")
+        title.grid(row=0, column=1)
 
         files = self.get_flash_collection()
         names = list(files.keys())
@@ -82,7 +90,7 @@ class FlashCardApp:
 
         btn_row = self.rows
         create_btn = ttk.Button(
-            self.collection_frame,
+            self.btn_frame,
             text="Create Collection",
             command="",
         )
@@ -92,7 +100,6 @@ class FlashCardApp:
             column=0,
             columnspan=self.cols,
             pady=(5),
-            sticky=(E,W)
         )
 
 
@@ -122,15 +129,13 @@ class FlashCardApp:
     def show_collections(self):
         """Returns to flash card collection grid"""
         #clears the widgets on the collection frame
-        for widget in self.collection_frame.winfo_children():
-            widget.destroy()
+        self.wipe_ui()
         self.refresh_collections()
 
     def open_collection(self, title):
         """Opens the collection that the user clicks on"""
         #clears the widgets on the collection frame
-        for widget in self.collection_frame.winfo_children():
-            widget.destroy()
+        self.wipe_ui()
 
         # title of the flash card using a text box
         opened_collection_title = ttk.Label(self.title_frame, text=title, anchor="center")
@@ -149,11 +154,11 @@ class FlashCardApp:
 
         #Button to go back to flash card collections
         back_btn = ttk.Button(
-            self.collection_frame,
+            self.btn_frame,
             text = "Back",
             command=self.show_collections
         )
-        back_btn.grid(pady=5, sticky=(E,W))
+        back_btn.grid(pady=5)
 
     def get_card_content(self, title):
         """Gets the json objects from json files in flashcard collection folder"""
@@ -176,3 +181,12 @@ class FlashCardApp:
         except json.JSONDecodeError as e:
             print(f"Error decoding JSON in {filename}: {e}")
             return []
+        
+    def wipe_ui(self):
+        """Destroys all widgets when the ui changes"""
+        for w in self.collection_frame.winfo_children():
+            w.destroy()
+        for b in self.btn_frame.winfo_children():
+            b.destroy()
+        for t in self.title_frame.winfo_children():
+            t.destroy()

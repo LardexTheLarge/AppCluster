@@ -31,6 +31,10 @@ class FlashCardApp:
         self.title_frame.columnconfigure(1, weight=1)
         self.title_frame.columnconfigure(2, weight=1)
 
+        #Frame that will hold the single card's study material
+        self.card_frame = ttk.Frame(self.content)
+        self.card_frame.grid(row=1, sticky=(N,S,W,E))
+
         #Flash card collection grid
         self.collection_frame = ttk.Frame(self.content)
         self.collection_frame.grid(row=1, sticky=(tk.N, tk.E, tk.W))
@@ -73,10 +77,11 @@ class FlashCardApp:
         for idx, filename in enumerate(names):
             r, c = divmod(idx, self.cols)
 
-            lbl = ttk.Label(
+            lbl = tk.Label(
                 self.collection_frame,
                 text=filename,
                 width=20,
+                height=2,
                 relief="solid",
                 borderwidth=1,
                 cursor="hand2",
@@ -86,7 +91,7 @@ class FlashCardApp:
             )
             lbl.grid(row=r, column=c, padx=5, pady=5, sticky=(N,S,E,W))
 
-            lbl.bind("<Button-1>", lambda e, fn=filename: self.open_collection(fn))
+            lbl.bind("<Button-1>", lambda e, fn=filename: self.study_collection(fn))
 
         btn_row = self.rows
         create_btn = ttk.Button(
@@ -101,7 +106,6 @@ class FlashCardApp:
             columnspan=self.cols,
             pady=(5),
         )
-
 
     def get_flash_collection(self):
         """Fetch flash cards collection from storage"""
@@ -121,10 +125,6 @@ class FlashCardApp:
                 except json.JSONDecodeError:
                     print(f"Warning: Could not decode {filename}")
         return collections
-        
-    # def save_flashcards(self, data, path="flashcards.json"):
-    #     with open(path, "w") as file:
-    #         json.dump(data, file, indent=4)
 
     def show_collections(self):
         """Returns to flash card collection grid"""
@@ -143,7 +143,7 @@ class FlashCardApp:
 
         #List of flash card objects from the json file
         flashcards = self.get_card_content(title)
-
+        print(flashcards)
         #For loop that assigns a row and flashcard form the flashcards list
         for row_index, flashcard in enumerate(flashcards):
             q_lbl = ttk.Label(self.collection_frame, text=flashcard["question"])
@@ -159,6 +159,47 @@ class FlashCardApp:
             command=self.show_collections
         )
         back_btn.grid(pady=5)
+
+    def study_collection(self, title):
+        """Allows the user to start studying the Flash cards in the collection"""
+
+        #Clears the UI
+        self.wipe_ui()
+
+        # Title of the collection
+        collection_title = ttk.Label(self.title_frame, text=title)
+        collection_title.grid(row=0, column=1)
+
+        #List of flash card objects from the json file
+        flashcards = self.get_card_content(title)
+        
+        #Iterates through the list of objects and assigns them to a label 
+        for flashcard in flashcards:
+            card_front = tk.Label(self.card_frame, text=flashcard["question"], height=10, relief="raised", borderwidth=5)
+            card_back = tk.Label(self.card_frame, text=flashcard["answer"], height=10, relief="raised", borderwidth=5)
+
+        #overlaps the labels and puts the front card first
+        card_front.grid(row=0, sticky=(N,S,W,E))
+        card_back.grid(row=0, sticky=(N,S,E,W))
+        card_front.lift()
+
+        #Binded functionality to each label to bring one to the front
+        card_front.bind("<Button-1>", lambda e: card_back.lift())
+        card_back.bind("<Button-1>", lambda e: card_front.lift())
+
+        #Buttons for cycling cards and backing out of the study mode
+        back_btn = ttk.Button(self.btn_frame, text="Back", command=self.refresh_collections)
+        cycle_forward = ttk.Button(self.btn_frame, text="Forward", width=50)
+        cycle_back = ttk.Button(self.btn_frame, text="Backward", width=50)
+
+        back_btn.grid(row=0, column=0, sticky=(W))
+        cycle_forward.grid(row=0, column=2, columnspan=2)
+        cycle_back.grid(row=0, column=1)
+
+        #Cycle buttons functionality
+        # cycle_forward.bind("<Button-1>", lambda e:)
+        # cycle_back.bind("<Button-1>", lambda e:)
+
 
     def get_card_content(self, title):
         """Gets the json objects from json files in flashcard collection folder"""
@@ -181,7 +222,7 @@ class FlashCardApp:
         except json.JSONDecodeError as e:
             print(f"Error decoding JSON in {filename}: {e}")
             return []
-        
+
     def wipe_ui(self):
         """Destroys all widgets when the ui changes"""
         for w in self.collection_frame.winfo_children():
@@ -190,3 +231,9 @@ class FlashCardApp:
             b.destroy()
         for t in self.title_frame.winfo_children():
             t.destroy()
+        for c in self.card_frame.winfo_children():
+            c.destroy()
+
+    # def save_flashcards(self, data, path="flashcards.json"):
+    #     with open(path, "w") as file:
+    #         json.dump(data, file, indent=4)

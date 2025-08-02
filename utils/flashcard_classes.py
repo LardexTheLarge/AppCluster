@@ -173,7 +173,7 @@ class FlashCardApp:
             command=self.show_collections
         )
         back_btn.grid(pady=5)
-
+#<--FLASHCARD CYCLING-->
     def study_collection(self, title):
         """Allows the user to start studying the Flash cards in the collection"""
         #Clears the UI
@@ -185,36 +185,47 @@ class FlashCardApp:
         collection_title.grid(row=0, column=1)
 
         #List of flash card objects from the json file
-        flashcards = self.get_card_content(title)
+        self.flashcards = self.get_card_content(title)
+        self.current_index = 0
         
         #Iterates through the list of objects and assigns them to a label 
-        for flashcard in flashcards:
-            card_front = tk.Label(self.card_frame, text=flashcard["question"], width=80, height=20, relief="raised", borderwidth=5)
-            card_back = tk.Label(self.card_frame, text=flashcard["answer"], width=80, height=20, relief="raised", borderwidth=5)
+        for i, flashcard in enumerate(self.flashcards):
+            self.card_front = tk.Label(self.card_frame, text=flashcard["question"], width=80, height=20, relief="raised", borderwidth=5)
+            self.card_back = tk.Label(self.card_frame, text=flashcard["answer"], width=80, height=20, relief="raised", borderwidth=5)
 
         #overlaps the labels and puts the front card first
-        card_front.grid(row=1, column=1, sticky=(N,S,W,E))
-        card_back.grid(row=1, column=1, sticky=(N,S,E,W))
-        card_front.lift()
+        self.card_front.grid(row=1, column=1, sticky=(N,S,W,E))
+        self.card_back.grid(row=1, column=1, sticky=(N,S,E,W))
+        self.card_front.lift()
 
         #Binded functionality to each label to bring one to the front
-        card_front.bind("<Button-1>", lambda e: card_back.lift())
-        card_back.bind("<Button-1>", lambda e: card_front.lift())
+        self.card_front.bind("<Button-1>", lambda e: self.card_back.lift())
+        self.card_back.bind("<Button-1>", lambda e: self.card_front.lift())
 
         #Buttons for cycling cards and backing out of the study mode
         back_btn = ttk.Button(self.btn_frame, text="Back", command=self.refresh_collections)
-        cycle_forward = ttk.Button(self.btn_frame, text="Forward", width=50)
-        cycle_back = ttk.Button(self.btn_frame, text="Backward", width=50)
+        cycle_forward = ttk.Button(self.btn_frame, text="Forward", width=50, command=self.next_card)
+        cycle_back = ttk.Button(self.btn_frame, text="Backward", width=50, command=self.prev_card)
 
         back_btn.grid(row=0, column=0, sticky=(W))
         cycle_forward.grid(row=0, column=2, columnspan=2)
         cycle_back.grid(row=0, column=1)
 
-        #Cycle buttons functionality
-        # cycle_forward.bind("<Button-1>", lambda e:)
-        # cycle_back.bind("<Button-1>", lambda e:)
+    def update_card(self):
+        flashcard = self.flashcards[self.current_index]
+        self.card_front.config(text=flashcard["question"])
+        self.card_back.config(text=flashcard["answer"])
+        self.card_front.lift()
 
+    def next_card(self):
+        self.current_index = (self.current_index + 1) % len(self.flashcards)
+        self.update_card()
 
+    def prev_card(self):
+        self.current_index = (self.current_index - 1) % len(self.flashcards)
+        self.update_card()
+
+#<--FLASHCARD CYCLING-->
     def get_card_content(self, title):
         """Gets the json objects from json files in flashcard collection folder"""
 

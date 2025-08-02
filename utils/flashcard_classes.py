@@ -32,12 +32,19 @@ class FlashCardApp:
         self.title_frame.columnconfigure(2, weight=1)
 
         #Frame that will hold the single card's study material
-        self.card_frame = ttk.Frame(self.content)
-        self.card_frame.grid(row=1, sticky=(N,S,W,E))
+        self.card_frame = ttk.Frame(self.content, relief="groove", borderwidth=2)
+        self.card_frame.grid(row=1, column=0, sticky=(N,S,W,E))
+        self.card_frame.columnconfigure(0, weight=1)
+        self.card_frame.columnconfigure(1, weight=1)
+        self.card_frame.columnconfigure(2, weight=1)
+
+        self.card_frame.rowconfigure(0, weight=1)
+        self.card_frame.rowconfigure(1, weight=1)
+        self.card_frame.rowconfigure(2, weight=1)
 
         #Flash card collection grid
-        self.collection_frame = ttk.Frame(self.content)
-        self.collection_frame.grid(row=1, sticky=(tk.N, tk.E, tk.W))
+        self.collection_frame = ttk.Frame(self.content, relief="sunken", borderwidth=10)
+        self.collection_frame.grid(row=1, column=0, sticky=(tk.N, tk.E, tk.W))
         self.collection_frame.columnconfigure(0, weight=1)
         self.collection_frame.rowconfigure(1, weight=2)
 
@@ -53,12 +60,18 @@ class FlashCardApp:
         #Clears the existing widgets
         self.wipe_ui()
 
+        #Brings back the grid after it's forgotten
+        self.collection_frame.grid(row=1, column=0, sticky=(tk.N, tk.E, tk.W))
+
+        #Shows what ui the user is viewing and centering the title
         title = ttk.Label(self.title_frame, text="Flash Card Collections")
         title.grid(row=0, column=1)
 
+        #Gets the collection file and puts each file into a list with a length of the list
         files = self.get_flash_collection()
         names = list(files.keys())
         count = len(names)
+        #Counts to see if there are files in the list
         if count == 0:
             ttk.Label(self.collection_frame, text="No collections found.").grid()
             return
@@ -91,6 +104,7 @@ class FlashCardApp:
             )
             lbl.grid(row=r, column=c, padx=5, pady=5, sticky=(N,S,E,W))
 
+            #Each label is bound by a function and will bring up the flash cards when clicked
             lbl.bind("<Button-1>", lambda e, fn=filename: self.study_collection(fn))
 
         btn_row = self.rows
@@ -143,7 +157,7 @@ class FlashCardApp:
 
         #List of flash card objects from the json file
         flashcards = self.get_card_content(title)
-        print(flashcards)
+        
         #For loop that assigns a row and flashcard form the flashcards list
         for row_index, flashcard in enumerate(flashcards):
             q_lbl = ttk.Label(self.collection_frame, text=flashcard["question"])
@@ -162,9 +176,9 @@ class FlashCardApp:
 
     def study_collection(self, title):
         """Allows the user to start studying the Flash cards in the collection"""
-
         #Clears the UI
         self.wipe_ui()
+        self.collection_frame.grid_forget()
 
         # Title of the collection
         collection_title = ttk.Label(self.title_frame, text=title)
@@ -175,12 +189,12 @@ class FlashCardApp:
         
         #Iterates through the list of objects and assigns them to a label 
         for flashcard in flashcards:
-            card_front = tk.Label(self.card_frame, text=flashcard["question"], height=10, relief="raised", borderwidth=5)
-            card_back = tk.Label(self.card_frame, text=flashcard["answer"], height=10, relief="raised", borderwidth=5)
+            card_front = tk.Label(self.card_frame, text=flashcard["question"], width=80, height=20, relief="raised", borderwidth=5)
+            card_back = tk.Label(self.card_frame, text=flashcard["answer"], width=80, height=20, relief="raised", borderwidth=5)
 
         #overlaps the labels and puts the front card first
-        card_front.grid(row=0, sticky=(N,S,W,E))
-        card_back.grid(row=0, sticky=(N,S,E,W))
+        card_front.grid(row=1, column=1, sticky=(N,S,W,E))
+        card_back.grid(row=1, column=1, sticky=(N,S,E,W))
         card_front.lift()
 
         #Binded functionality to each label to bring one to the front

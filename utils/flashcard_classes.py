@@ -43,7 +43,7 @@ class FlashCardApp:
         self.card_frame.rowconfigure(2, weight=1)
 
         #Flash card collection grid
-        self.collection_frame = ttk.Frame(self.content, relief="sunken", borderwidth=10)
+        self.collection_frame = ttk.Frame(self.content)
         self.collection_frame.grid(row=1, column=0, sticky=(tk.N, tk.E, tk.W))
         self.collection_frame.columnconfigure(0, weight=1)
         self.collection_frame.rowconfigure(1, weight=2)
@@ -190,8 +190,8 @@ class FlashCardApp:
         
         #Iterates through the list of objects and assigns them to a label 
         for i, flashcard in enumerate(self.flashcards):
-            self.card_front = tk.Label(self.card_frame, text=flashcard["question"], width=80, height=20, relief="raised", borderwidth=5)
-            self.card_back = tk.Label(self.card_frame, text=flashcard["answer"], width=80, height=20, relief="raised", borderwidth=5)
+            self.card_front = tk.Label(self.card_frame, text=flashcard["question"], width=80, height=20, relief="raised", borderwidth=5, wraplength=500)
+            self.card_back = tk.Label(self.card_frame, text=flashcard["answer"], width=80, height=20, relief="raised", borderwidth=5, wraplength=500)
 
         #overlaps the labels and puts the front card first
         self.card_front.grid(row=1, column=1, sticky=(N,S,W,E))
@@ -224,8 +224,8 @@ class FlashCardApp:
     def prev_card(self):
         self.current_index = (self.current_index - 1) % len(self.flashcards)
         self.update_card()
-
 #<--FLASHCARD CYCLING-->
+
     def get_card_content(self, title):
         """Gets the json objects from json files in flashcard collection folder"""
 

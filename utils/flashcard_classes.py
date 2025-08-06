@@ -90,8 +90,11 @@ class FlashCardApp:
         for idx, filename in enumerate(names):
             r, c = divmod(idx, self.cols)
 
+            cell_frame = ttk.Frame(self.collection_frame)
+            cell_frame.grid(row=r, column=c, padx=5, pady=5, sticky=(N,S,W,E))
+            
             lbl = tk.Label(
-                self.collection_frame,
+                cell_frame,
                 text=filename,
                 width=20,
                 height=2,
@@ -102,7 +105,11 @@ class FlashCardApp:
                 background="lightblue",
                 anchor="center",
             )
-            lbl.grid(row=r, column=c, padx=5, pady=5, sticky=(N,S,E,W))
+            lbl.pack(fill="both", expand=True)
+
+            #Edit button for each label so that users can go to an editing ui 
+            edit_btn = ttk.Button(cell_frame, text="Edit", command=lambda fn=filename: self.edit_collection(fn))
+            edit_btn.pack(fill="x")
 
             #Each label is bound by a function and will bring up the flash cards when clicked
             lbl.bind("<Button-1>", lambda e, fn=filename: self.study_collection(fn))
@@ -146,13 +153,14 @@ class FlashCardApp:
         self.wipe_ui()
         self.refresh_collections()
 
-    def open_collection(self, title):
-        """Opens the collection that the user clicks on"""
+    def edit_collection(self, title):
+        """Opens the collection that the user can edit each card or add more cards."""
         #clears the widgets on the collection frame
         self.wipe_ui()
 
         # title of the flash card using a text box
-        opened_collection_title = ttk.Label(self.title_frame, text=title, anchor="center")
+        opened_collection_title = Text(self.title_frame)
+        opened_collection_title.insert("1.0", title)
         opened_collection_title.grid(row=0, column=1)
 
         #List of flash card objects from the json file

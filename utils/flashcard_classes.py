@@ -130,25 +130,6 @@ class FlashCardApp:
             pady=(5),
         )
 
-    def get_flash_collection(self):
-        """Fetch flash cards collection from storage"""
-        collections = {}
-
-        # Checks for directory
-        os.makedirs(self.FLASHCARD_DIR, exist_ok=True)
-
-        for filename in os.listdir(self.FLASHCARD_DIR):
-            if filename.endswith(".json"):
-                path = os.path.join(self.FLASHCARD_DIR, filename)
-                try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                        collection_name = os.path.splitext(filename)[0]
-                        collections[collection_name] = data
-                except json.JSONDecodeError:
-                    print(f"Warning: Could not decode {filename}")
-        return collections
-
     def show_collections(self):
         """Returns to flash card collection grid"""
         #clears the widgets on the collection frame
@@ -164,6 +145,9 @@ class FlashCardApp:
         opened_collection_title = Text(self.title_frame, height=1)
         opened_collection_title.insert("1.0", title)
         opened_collection_title.grid(row=0, column=1)
+
+        self.q_widgets = []
+        self.a_widgets = []
 
         #List of flash card objects from the json file
         flashcards = self.get_card_content(title)
@@ -183,7 +167,8 @@ class FlashCardApp:
             q_lbl.grid(row=row_index, column=0, sticky=(N,W), padx=5, pady=2)
             a_lbl.grid(row=row_index, column=1, sticky=(N,W), padx=5, pady=2)
 
-
+            self.q_widgets.append(q_lbl)
+            self.a_widgets.append(a_lbl)
 
         #Button to go back to flash card collections
         back_btn = ttk.Button(
@@ -191,7 +176,22 @@ class FlashCardApp:
             text = "Back",
             command=self.show_collections
         )
-        back_btn.grid(pady=5)
+        back_btn.grid(sticky=(W))
+        
+        #Save button
+        save_btn = ttk.Button(
+            self.btn_frame,
+            text="Save",
+            command=lambda: self.save_flashcards(opened_collection_title.get("1.0", "end").strip(),
+                                                [
+                                                    {
+                                                        "question": q.get("1.0", "end").strip(),
+                                                        "answer": a.get("1.0", "end").strip()
+                                                    }
+                                                    for q, a in zip(self.q_widgets, self.a_widgets)
+                                                ])
+        )
+        save_btn.grid(column=1, row=0)
 #<--FLASHCARD CYCLING-->
     def study_collection(self, title):
         """Allows the user to start studying the Flash cards in the collection"""
@@ -245,6 +245,7 @@ class FlashCardApp:
         self.update_card()
 #<--FLASHCARD CYCLING-->
 
+#<--OS CRUD functions-->
     def get_card_content(self, title):
         """Gets the json objects from json files in flashcard collection folder"""
 
@@ -266,6 +267,35 @@ class FlashCardApp:
         except json.JSONDecodeError as e:
             print(f"Error decoding JSON in {filename}: {e}")
             return []
+        
+    def save_flashcards(self, title, data):
+        """Saves edited flashcard collection"""
+        
+        filename = f"{title}.json"
+        path = os.path.join(self.FLASHCARD_DIR, filename)
+
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+
+    def get_flash_collection(self):
+        """Fetch flash cards collection from storage"""
+        collections = {}
+
+        # Checks for directory
+        os.makedirs(self.FLASHCARD_DIR, exist_ok=True)
+
+        for filename in os.listdir(self.FLASHCARD_DIR):
+            if filename.endswith(".json"):
+                path = os.path.join(self.FLASHCARD_DIR, filename)
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        collection_name = os.path.splitext(filename)[0]
+                        collections[collection_name] = data
+                except json.JSONDecodeError:
+                    print(f"Warning: Could not decode {filename}")
+        return collections
+#<--OS CRUD functions-->
 
     def wipe_ui(self):
         """Destroys all widgets when the ui changes"""
@@ -277,7 +307,3 @@ class FlashCardApp:
             t.destroy()
         for c in self.card_frame.winfo_children():
             c.destroy()
-
-    # def save_flashcards(self, data, path="flashcards.json"):
-    #     with open(path, "w") as file:
-    #         json.dump(data, file, indent=4)

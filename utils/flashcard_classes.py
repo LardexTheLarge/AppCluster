@@ -13,6 +13,7 @@ class FlashCardApp:
 
         #Root
         root.minsize(800,800)
+        root.maxsize(800,800)
         root.title("Flash Cards")
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
@@ -32,7 +33,7 @@ class FlashCardApp:
         self.title_frame.columnconfigure(2, weight=1)
 
         #Frame that will hold the single card's study material
-        self.card_frame = ttk.Frame(self.content, relief="groove", borderwidth=2)
+        self.card_frame = ttk.Frame(self.content)
         self.card_frame.grid(row=1, column=0, sticky=(N,S,W,E))
         self.card_frame.columnconfigure(0, weight=1)
         self.card_frame.columnconfigure(1, weight=1)
@@ -90,13 +91,14 @@ class FlashCardApp:
         for idx, filename in enumerate(names):
             r, c = divmod(idx, self.cols)
 
-            cell_frame = ttk.Frame(self.collection_frame)
+            cell_frame = ttk.Frame(self.collection_frame, borderwidth=2, relief="groove")
+            cell_frame.columnconfigure(1, weight=1)
             cell_frame.grid(row=r, column=c, padx=5, pady=5, sticky=(N,S,W,E))
             
             lbl = tk.Label(
                 cell_frame,
                 text=filename,
-                width=20,
+                width=40,
                 height=2,
                 relief="solid",
                 borderwidth=1,
@@ -105,11 +107,11 @@ class FlashCardApp:
                 background="lightblue",
                 anchor="center",
             )
-            lbl.pack(fill="both", expand=True)
+            lbl.grid(column=0, row=0)
 
             #Edit button for each label so that users can go to an editing ui 
             edit_btn = ttk.Button(cell_frame, text="Edit", command=lambda fn=filename: self.edit_collection(fn))
-            edit_btn.pack(fill="x")
+            edit_btn.grid(column=1, row=0)
 
             #Each label is bound by a function and will bring up the flash cards when clicked
             lbl.bind("<Button-1>", lambda e, fn=filename: self.study_collection(fn))
@@ -159,7 +161,7 @@ class FlashCardApp:
         self.wipe_ui()
 
         # title of the flash card using a text box
-        opened_collection_title = Text(self.title_frame)
+        opened_collection_title = Text(self.title_frame, height=1)
         opened_collection_title.insert("1.0", title)
         opened_collection_title.grid(row=0, column=1)
 
@@ -168,11 +170,20 @@ class FlashCardApp:
         
         #For loop that assigns a row and flashcard form the flashcards list
         for row_index, flashcard in enumerate(flashcards):
-            q_lbl = ttk.Label(self.collection_frame, text=flashcard["question"])
-            a_lbl = ttk.Label(self.collection_frame, text=flashcard["answer"])
+            q_lbl = Text(self.collection_frame, height=3, wrap="word")
+            q_lbl.insert("1.0", flashcard["question"])
+            scrollBar = ttk.Scrollbar(self.collection_frame, orient="vertical", command=q_lbl.yview)
+            q_lbl.config(yscrollcommand=scrollBar.set)
+
+            a_lbl = Text(self.collection_frame, height=3, wrap="word")
+            a_lbl.insert("1.0", flashcard["answer"])
+            scrollBar = ttk.Scrollbar(self.collection_frame, orient="vertical", command=a_lbl.yview)
+            a_lbl.config(yscrollcommand=scrollBar.set)
 
             q_lbl.grid(row=row_index, column=0, sticky=(N,W), padx=5, pady=2)
             a_lbl.grid(row=row_index, column=1, sticky=(N,W), padx=5, pady=2)
+
+
 
         #Button to go back to flash card collections
         back_btn = ttk.Button(
